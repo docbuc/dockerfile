@@ -1,8 +1,9 @@
 # Datei Dockerfile
-FROM haskell
-
-# Pakete installieren
-RUN apt-get update -y && \
+FROM ubuntu:20.04
+ENV TZ="Europe/Berlin" 
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ > /etc/timezone && \
+    apt-get update -y && \
     apt-get install -y -o Acquire::Retries=10 \
                      --no-install-recommends \
       texlive-latex-recommended \
@@ -10,30 +11,36 @@ RUN apt-get update -y && \
       texlive-fonts-recommended \
       texlive-lang-german \
       texlive-pstricks \
+      texlive-fonts-extra \
       imagemagick \
       unzip \
       python3 \
       ghostscript \
+      locales \
+      joe \
+      vim \
+      curl \
+      wget \
+      ca-certificates \
       less && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Pandoc installieren
-RUN cabal update && \
-    cabal install pandoc-2.1.1 && \
-    ln -s /root/.cabal/bin/pandoc /usr/bin/pandoc
+RUN curl -L https://github.com/jgm/pandoc/releases/download/2.14/pandoc-2.14-1-amd64.deb \
+   -o /tmp/pandoc.deb && \
+   dpkg -i /tmp/pandoc.deb && \
+   rm /tmp/pandoc.deb
 
-# Mitteleuropäische Zeitzone
-# (siehe https://serverfault.com/questions/683605)
-RUN cp /usr/share/zoneinfo/Europe/Berlin /etc/localtime
-
-# Fonts für LaTeX installieren
-# ADD rheinwerkfonts.tgz /usr/local/share/texmf
-# RUN texhash
+# Fonts installieren
+# (die Font-Datei dürfen wir nicht weitergeben)
+# ADD myfonts.tgz /usr/local/share/texmf
+# RUN texhash 
 
 # Volume /data, bei docker run mit dem Arbeitsverzeichnis
-# verbinden, also: docker run -v $(pwd):/data
-WORKDIR /data
+# verbinden, also: docker run -v $(pwd):/data 
+# Fedora, RHEL:    docker run -v $(pwd):/data:z
 VOLUME  ["/data"]
 
+# Startkommando
 ENTRYPOINT ["/bin/bash"]
